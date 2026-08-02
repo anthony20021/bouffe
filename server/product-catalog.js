@@ -50,7 +50,7 @@ export class ProductCatalog {
       page_size: '60',
     })
     const response = await this.fetchImpl(`${API_URL}?${params}`, {
-      headers: { 'User-Agent': process.env.OFF_USER_AGENT || 'Tchateur/1.0 (https://github.com/your-org/tchateur)' },
+      headers: { 'User-Agent': globalThis.process?.env?.OFF_USER_AGENT || 'Tchateur/1.0 (https://github.com/your-org/tchateur)' },
     })
     if (!response.ok) throw new Error('La liste des produits est temporairement indisponible.')
     const data = await response.json()

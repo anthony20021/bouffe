@@ -7,18 +7,17 @@ Jeu Vue 3 pour deux personnes : trouvez le produit alimentaire que l’autre pr�
 ```bash
 npm install
 copy .env.example .env
-npm run server
 npm run dev
 ```
 
-Lancez le serveur WebSocket dans un terminal et Vite dans un second. Définissez `VITE_WS_URL` dans `.env` si le serveur n’est pas sur `ws://localhost:3000`.
-Avant une mise en ligne, configurez aussi `OFF_USER_AGENT` avec le nom, la version et un moyen de contact de votre application, comme demandé par Open Food Facts.
+Supabase Realtime remplace le serveur WebSocket local : une seule commande suffit pour lancer le frontend.
+Open Food Facts reste utilisé pour les produits ; le jeu bascule sur sa sélection locale si leur service limite temporairement les requêtes.
 
 ## Configuration Supabase et Vercel
 
 1. Créez un projet sur [database.new](https://database.new/).
 2. Dans Supabase, ouvrez **Settings → API** : copiez **Project URL** dans `VITE_SUPABASE_URL` et **Publishable key** dans `VITE_SUPABASE_PUBLISHABLE_KEY`.
-3. Ne placez jamais la clé `service_role` / **Secret key** dans un fichier Vite ou dans le navigateur ; elle servira uniquement aux Edge Functions Supabase.
+3. Aucune clé `service_role` n’est nécessaire : cette version utilise exclusivement Supabase Realtime et la clé publishable.
 4. Dans Vercel, ouvrez votre projet → **Settings → Environment Variables** et ajoutez les deux variables `VITE_…`, puis redéployez.
 
 ```bash
