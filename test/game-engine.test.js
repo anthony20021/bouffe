@@ -14,7 +14,7 @@ test('le produit de référence et les propositions ne peuvent jamais être réu
   const proposalId = game.availableProducts[0].id
   game.selectProduct('a', proposalId)
   game.answerPreference('b', false)
-  assert.throws(() => game.selectProduct('a', proposalId), /plus disponible/)
+  assert.throws(() => game.selectProduct('a', proposalId), /Aucune proposition/)
   assert.equal(game.usedProductIds.has(referenceId), true)
   assert.equal(game.usedProductIds.has(proposalId), true)
 })
@@ -31,13 +31,10 @@ test('une victoire attribue un point et alterne le joueur actif à la manche sui
   assert.equal(game.activePlayerId, 'b')
 })
 
-test('le nombre d’essais est réduit aux produits réellement disponibles', async () => {
+test('un refus termine la manche même si des essais restent', async () => {
   const shortCatalog = { getByTheme: async () => products.slice(0, 3) }
   const game = new GameEngine({ catalog: shortCatalog, random })
   await game.start(['a', 'b'])
-  assert.equal(game.maxAttempts, 2)
-  game.selectProduct('a', game.availableProducts[0].id)
-  game.answerPreference('b', false)
   game.selectProduct('a', game.availableProducts[0].id)
   game.answerPreference('b', false)
   assert.equal(game.phase, 'round_result')

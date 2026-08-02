@@ -22,6 +22,7 @@ export class ChatSocket {
     this.channel?.unsubscribe()
     this.channel = this.supabase.channel(`tchateur:${roomCode}`, { config: { broadcast: { self: false } } })
     this.channel.on('broadcast', { event: 'command' }, ({ payload }) => this.receiveCommand(payload))
+    this.channel.on('broadcast', { event: 'chat' }, ({ payload }) => this.emit({ type: 'chat_message', ...payload }))
     this.channel.on('broadcast', { event: 'state' }, ({ payload }) => { if (!this.host) this.emit(payload) })
     await new Promise((resolve, reject) => this.channel.subscribe((status) => status === 'SUBSCRIBED' ? resolve() : status === 'CHANNEL_ERROR' && reject(new Error('Connexion Supabase Realtime impossible.'))))
     this.playerId = playerId
@@ -33,10 +34,16 @@ export class ChatSocket {
   async send(type, payload = {}) {
     if (type === 'create_room') {
       this.host = true; this.creatorId = payload.playerId; this.players.set(payload.playerId, { id: payload.playerId, name: payload.name, connected: true })
-      await this.subscribe(code(), payload.playerId); this.engine = new GameEngine({ catalog: new ProductCatalog() }); this.emit(this.snapshot('room_created')); return
+      await this.subscribe(code(), payload.playerId); this.engine = new GameEngine({ catalog: new ProductCatalog({ apiUrl: '/api/products' }) }); this.emit(this.snapshot('room_created')); return
     }
     if (type === 'join_room') {
       this.host = false; await this.subscribe(payload.roomCode, payload.playerId); await this.channel.send({ type: 'broadcast', event: 'command', payload: { type: 'join_room', ...payload } }); return
+    }
+    if (type === 'chat_message') {
+      const chat = { author: payload.author, text: String(payload.text || '').trim().slice(0, 500), time: new Date().toISOString() }
+      if (!chat.text) return
+      this.emit({ type: 'chat_message', ...chat })
+      return this.channel.send({ type: 'broadcast', event: 'chat', payload: chat })
     }
     if (this.host) return this.apply(type, payload, this.playerId)
     return this.channel.send({ type: 'broadcast', event: 'command', payload: { type, ...payload, playerId: this.playerId } })

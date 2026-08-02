@@ -87,12 +87,8 @@ export class GameEngine {
       this.result = { type: 'win', message: `${proposal.product.name} est préféré !` }
       return
     }
-    if (this.proposals.length >= this.maxAttempts) {
-      this.phase = 'round_result'
-      this.result = { type: 'loss', message: 'Aucune proposition n’a été préférée.' }
-      return
-    }
-    this.phase = 'selecting'
+    this.phase = 'round_result'
+    this.result = { type: 'loss', message: 'Proposition refusée : la manche est perdue.' }
   }
 
   async nextRound(playerId) {

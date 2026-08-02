@@ -28,8 +28,9 @@ function fallbackProducts(theme) {
 }
 
 export class ProductCatalog {
-  constructor({ fetchImpl = fetch } = {}) {
+  constructor({ fetchImpl = fetch, apiUrl = API_URL } = {}) {
     this.fetchImpl = fetchImpl
+    this.apiUrl = apiUrl
     this.cache = new Map()
   }
 
@@ -49,7 +50,7 @@ export class ProductCatalog {
       // de balayer inutilement les millions de fiches Open Food Facts.
       page_size: '60',
     })
-    const response = await this.fetchImpl(`${API_URL}?${params}`, {
+    const response = await this.fetchImpl(`${this.apiUrl}?${params}`, {
       headers: { 'User-Agent': globalThis.process?.env?.OFF_USER_AGENT || 'Tchateur/1.0 (https://github.com/your-org/tchateur)' },
     })
     if (!response.ok) throw new Error('La liste des produits est temporairement indisponible.')

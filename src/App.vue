@@ -13,6 +13,8 @@ const game = ref(null)
 const error = ref('')
 const loading = ref(false)
 const selectedProductId = ref('')
+const message = ref('')
+const messages = ref([])
 
 const normalizedCode = computed(() => roomCode.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6))
 const canEnter = computed(() => name.value.trim().length >= 2 && (screen.value === 'create' || normalizedCode.value.length >= 4))
@@ -37,6 +39,7 @@ function applyState(data) {
 const unsubscribe = socket.onMessage((data) => {
   if (['room_created', 'room_joined', 'game_state', 'game_over'].includes(data.type)) applyState(data)
   if (data.type === 'game_error') error.value = data.message
+  if (data.type === 'chat_message') messages.value.push({ ...data, mine: data.author === name.value.trim() })
 })
 
 async function enterRoom(mode) {
@@ -51,7 +54,8 @@ function startGame() { send('game_start') }
 function submitProduct() { if (selectedProductId.value) { send('select_product', { productId: selectedProductId.value }); selectedProductId.value = '' } }
 function vote(prefersProposal) { send('answer_preference', { prefersProposal }) }
 function nextRound() { send('next_round') }
-function leaveRoom() { socket.disconnect(); game.value = null; players.value = []; localStorage.removeItem('tchateur:room'); screen.value = 'home' }
+function sendChat() { if (message.value.trim()) { send('chat_message', { author: name.value.trim(), text: message.value }); message.value = '' } }
+function leaveRoom() { socket.disconnect(); game.value = null; players.value = []; messages.value = []; localStorage.removeItem('tchateur:room'); screen.value = 'home' }
 onBeforeUnmount(() => { unsubscribe(); socket.disconnect() })
 </script>
 
@@ -68,7 +72,7 @@ onBeforeUnmount(() => { unsubscribe(); socket.disconnect() })
     <section v-else-if="screen === 'lobby'" class="lobby-card">
       <p class="eyebrow">SALLE D’ATTENTE</p><h1>Partage le code <b>{{ roomCode }}</b></h1><p>La partie commence quand vous êtes deux.</p>
       <div class="players"><div v-for="player in players" :key="player.id" class="player"><span :class="{ online: player.connected }">●</span>{{ player.name }} <small v-if="player.id === game?.creatorId">créateur</small></div><div v-if="players.length < 2" class="player waiting">● En attente d’un joueur…</div></div>
-      <p v-if="error" class="error">{{ error }}</p><button v-if="isCreator" class="submit" :disabled="!canStart" @click="startGame">Démarrer la partie</button><p v-else class="wait-note">Le créateur lancera la partie dès votre arrivée.</p>
+      <p v-if="error" class="error">{{ error }}</p><button v-if="isCreator" class="submit" :disabled="!canStart" @click="startGame">Démarrer la partie</button><p v-else class="wait-note">Le créateur lancera la partie dès votre arrivée.</p><div class="mini-chat"><article v-for="(item, index) in messages" :key="index" :class="{ mine: item.mine }"><b>{{ item.author }}</b> {{ item.text }}</article><form @submit.prevent="sendChat"><input v-model="message" placeholder="Écrire un message…" /><button>↑</button></form></div>
     </section>
 
     <section v-else class="game-layout">
@@ -84,7 +88,7 @@ onBeforeUnmount(() => { unsubscribe(); socket.disconnect() })
         </template>
         <template v-else-if="game.phase === 'round_result'"><div class="center-state"><p class="eyebrow">RÉSULTAT</p><h2>{{ game.result?.message }}</h2><p v-if="game.result?.type === 'loss'">Les produits refusés : {{ game.proposals.map(p => p.product.name).join(', ') }}</p><button class="submit" @click="nextRound">Manche suivante</button></div></template>
         <template v-else-if="game.phase === 'game_over'"><div class="center-state"><p class="eyebrow">PARTIE TERMINÉE</p><h2>{{ game.result?.winnerId ? `${players.find(p => p.id === game.result.winnerId)?.name} gagne !` : 'Égalité !' }}</h2><p>{{ game.result?.message }}</p><button class="submit" @click="leaveRoom">Nouvelle partie</button></div></template>
-        <p class="attribution">Données produits : Open Food Facts (ODbL).</p>
+        <div class="mini-chat"><article v-for="(item, index) in messages" :key="index" :class="{ mine: item.mine }"><b>{{ item.author }}</b> {{ item.text }}</article><form @submit.prevent="sendChat"><input v-model="message" placeholder="Discuter…" /><button>↑</button></form></div><p class="attribution">Données produits : Open Food Facts (ODbL).</p>
       </div>
     </section>
   </main>
