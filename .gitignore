@@ -1,0 +1,16 @@
+# Dépendances et artefacts de build
+node_modules/
+dist/
+.vite/
+coverage/
+
+# Secrets et configurations locales
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Outils et système
+.supabase/
+.DS_Store
+Thumbs.db
