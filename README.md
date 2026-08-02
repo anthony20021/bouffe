@@ -27,7 +27,7 @@ npm run build
 
 ## Règles
 
-- La partie compte cinq manches et le créateur la démarre lorsque les deux joueurs sont connectés.
+- La partie compte quatorze manches et le créateur la démarre lorsque les deux joueurs sont connectés.
 - Un thème et un produit de référence sont tirés aléatoirement à chaque manche.
 - Le joueur actif peut faire jusqu’à cinq propositions ; l’autre joueur vote.
 - Un produit (identifié par son code-barres) ne peut être utilisé qu’une fois pendant toute la partie.

@@ -3,7 +3,7 @@ import { THEMES } from './product-catalog.js'
 const shuffle = (items, random) => [...items].sort(() => random() - 0.5)
 
 export class GameEngine {
-  constructor({ catalog, random = Math.random, maxRounds = 5 } = {}) {
+  constructor({ catalog, random = Math.random, maxRounds = 14 } = {}) {
     this.catalog = catalog
     this.random = random
     this.maxRounds = maxRounds
