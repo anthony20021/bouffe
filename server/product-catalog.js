@@ -1,4 +1,4 @@
-const API_URL = 'https://world.openfoodfacts.org/api/v2/search'
+const API_URL = 'https://search.openfoodfacts.org/search'
 
 export const THEMES = [
   { id: 'boissons', label: 'Boissons', category: 'beverages' },
@@ -7,7 +7,7 @@ export const THEMES = [
   { id: 'chocolats', label: 'Chocolats', category: 'chocolates' },
   { id: 'bonbons', label: 'Bonbons', category: 'candies' },
   { id: 'cereales', label: 'Céréales', category: 'breakfast-cereals' },
-  { id: 'fast_food', label: 'Fast-food', category: 'fast-foods' },
+  { id: 'fast_food', label: 'Fast-food', category: 'fast-food' },
 ]
 
 const FALLBACK_BY_THEME = {
@@ -46,8 +46,7 @@ export class ProductCatalog {
 
   async fetchTheme(theme) {
     const params = new URLSearchParams({
-      categories_tags_en: theme.category,
-      countries_tags_en: 'france',
+      q: `categories_tags:"en:${theme.category}" AND countries_tags:"en:france"`,
       fields: 'code,product_name,product_name_fr,brands,image_front_small_url',
       // Un petit échantillon suffit pour une manche (5 essais maximum) et évite
       // de balayer inutilement les millions de fiches Open Food Facts.
@@ -60,9 +59,9 @@ export class ProductCatalog {
     const data = await response.json()
     const known = new Set()
 
-    return (data.products || []).flatMap((item) => {
+    return (data.hits || []).flatMap((item) => {
       const name = (item.product_name_fr || item.product_name || '').trim()
-      const brand = (item.brands || '').split(',')[0].trim()
+      const brand = (Array.isArray(item.brands) ? item.brands[0] : (item.brands || '').split(',')[0]).trim()
       if (!item.code || !name || !brand || known.has(item.code)) return []
       known.add(item.code)
       return [{ id: item.code, name, brand, theme: theme.id, imageUrl: item.image_front_small_url || '', active: true }]
