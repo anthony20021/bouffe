@@ -36,7 +36,10 @@ export class ProductCatalog {
 
   async getByTheme(theme) {
     if (!this.cache.has(theme.id)) {
-      this.cache.set(theme.id, this.fetchTheme(theme).catch(() => fallbackProducts(theme)))
+      this.cache.set(theme.id, this.fetchTheme(theme).catch((err) => {
+        console.warn(`Catalogue OFF indisponible pour "${theme.id}", repli local :`, err.message)
+        return fallbackProducts(theme)
+      }))
     }
     return this.cache.get(theme.id)
   }
@@ -53,7 +56,7 @@ export class ProductCatalog {
     const response = await this.fetchImpl(`${this.apiUrl}?${params}`, {
       headers: { 'User-Agent': globalThis.process?.env?.OFF_USER_AGENT || 'Tchateur/1.0 (https://github.com/your-org/tchateur)' },
     })
-    if (!response.ok) throw new Error('La liste des produits est temporairement indisponible.')
+    if (!response.ok) throw new Error(`La liste des produits est temporairement indisponible (HTTP ${response.status}).`)
     const data = await response.json()
     const known = new Set()
 
