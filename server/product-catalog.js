@@ -28,7 +28,7 @@ function fallbackProducts(theme) {
 }
 
 export class ProductCatalog {
-  constructor({ fetchImpl = fetch, apiUrl = API_URL } = {}) {
+  constructor({ fetchImpl = (...args) => fetch(...args), apiUrl = API_URL } = {}) {
     this.fetchImpl = fetchImpl
     this.apiUrl = apiUrl
     this.cache = new Map()
