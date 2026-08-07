@@ -1,5 +1,15 @@
 const API_URL = 'https://search.openfoodfacts.org/search'
 
+// Rapproche des noms comme "Lait de Coco" et "Lait de coco bio" pour éviter
+// de proposer plusieurs fois le même produit générique sous des marques différentes.
+function normalizeName(name) {
+  return name
+    .normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim()
+}
+
 export const THEMES = [
   { id: 'boissons', label: 'Boissons', category: 'beverages' },
   { id: 'biscuits', label: 'Biscuits', category: 'biscuits-and-cakes' },
@@ -57,13 +67,16 @@ export class ProductCatalog {
     })
     if (!response.ok) throw new Error(`La liste des produits est temporairement indisponible (HTTP ${response.status}).`)
     const data = await response.json()
-    const known = new Set()
+    const knownCodes = new Set()
+    const knownNames = new Set()
 
     return (data.hits || []).flatMap((item) => {
       const name = (item.product_name_fr || item.product_name || '').trim()
       const brand = (Array.isArray(item.brands) ? item.brands[0] : (item.brands || '').split(',')[0]).trim()
-      if (!item.code || !name || !brand || known.has(item.code)) return []
-      known.add(item.code)
+      const normalizedName = normalizeName(name)
+      if (!item.code || !name || !brand || knownCodes.has(item.code) || knownNames.has(normalizedName)) return []
+      knownCodes.add(item.code)
+      knownNames.add(normalizedName)
       return [{ id: item.code, name, brand, theme: theme.id, imageUrl: item.image_front_small_url || '', active: true }]
     })
   }
